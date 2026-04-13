@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { extractPixFromFruitfyPayload, pickOrderUuidForApi } from "./pixExtract";
+import { parseResponseJson } from "./parseResponseJson";
 import { mergeUrlParamsFromLocation, toFruitfyUtmPayload } from "./urlParams";
 
 const onlyDigits = (value: string) => value.replace(/\D/g, "");
@@ -601,7 +602,9 @@ const PixSuccess = ({ orderData, onReset }: { orderData: any, onReset: () => voi
       inFlight = true;
       try {
         const r = await fetch(`/api/order/${encodeURIComponent(orderUuid)}`);
-        const j = await r.json();
+        const j = (await parseResponseJson(r)) as {
+          data?: { status?: string };
+        };
         if (cancelled) return;
         const status = typeof j?.data?.status === "string" ? j.data.status : "";
         if (status === "paid") {
@@ -1298,7 +1301,10 @@ export default function App() {
       }),
     });
 
-    const payload = await response.json();
+    const payload = (await parseResponseJson(response)) as {
+      success?: boolean;
+      message?: string;
+    };
 
     if (!response.ok || payload?.success === false) {
       const message =
