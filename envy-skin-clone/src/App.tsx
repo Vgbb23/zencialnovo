@@ -57,6 +57,23 @@ const formatCpf = (digits: string) => {
   return `${d.slice(0, 3)}.${d.slice(3, 6)}.${d.slice(6, 9)}-${d.slice(9)}`;
 };
 
+/** Valida CPF brasileiro (11 dígitos + dígitos verificadores). */
+const isValidCpf = (digits: string): boolean => {
+  const d = onlyDigits(digits);
+  if (d.length !== 11) return false;
+  if (/^(\d)\1{10}$/.test(d)) return false;
+  let sum = 0;
+  for (let i = 0; i < 9; i++) sum += parseInt(d[i]!, 10) * (10 - i);
+  let rest = (sum * 10) % 11;
+  if (rest === 10 || rest === 11) rest = 0;
+  if (rest !== parseInt(d[9]!, 10)) return false;
+  sum = 0;
+  for (let i = 0; i < 10; i++) sum += parseInt(d[i]!, 10) * (11 - i);
+  rest = (sum * 10) % 11;
+  if (rest === 10 || rest === 11) rest = 0;
+  return rest === parseInt(d[10]!, 10);
+};
+
 const formatPhoneBr = (digits: string) => {
   const d = digits.slice(0, 11);
   if (d.length === 0) return "";
@@ -71,6 +88,9 @@ const formatPhoneBr = (digits: string) => {
 
 const inputMaskedClass =
   "w-full px-4 py-3 rounded-xl border border-[#F5F3FF] bg-[#FDFDFF] focus:outline-none focus:border-[#7B61FF] focus:ring-2 focus:ring-[#7B61FF]/15 transition-all text-sm tabular-nums tracking-wide text-[#4C1D95] placeholder:text-[#C4B8D4]";
+
+const inputMaskedErrorClass =
+  "w-full px-4 py-3 rounded-xl border border-red-400 bg-[#FDFDFF] focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all text-sm tabular-nums tracking-wide text-[#4C1D95] placeholder:text-[#C4B8D4]";
 
 // --- Checkout Components ---
 
@@ -98,6 +118,7 @@ const Checkout = ({ kit, onBack, onFinish }: { kit: any, onBack: () => void, onF
   const [quantity, setQuantity] = useState(1);
   const [shipping, setShipping] = useState<'free' | 'sedex'>('free');
   const [cepLoading, setCepLoading] = useState(false);
+  const [cepError, setCepError] = useState<string | null>(null);
   const [address, setAddress] = useState({
     cep: '',
     street: '',
@@ -121,30 +142,48 @@ const Checkout = ({ kit, onBack, onFinish }: { kit: any, onBack: () => void, onF
     const formatted = formatCep(digits);
     setAddress((prev) => ({ ...prev, cep: formatted }));
 
-    if (digits.length === 8) {
-      setCepLoading(true);
-      try {
-        const response = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
-        const data = await response.json();
-        if (!data.erro) {
-          setAddress((prev) => ({
-            ...prev,
-            cep: formatted,
-            street: data.logradouro,
-            neighborhood: data.bairro,
-            city: data.localidade,
-            state: data.uf,
-          }));
-        }
-      } catch (error) {
-        console.error("Erro ao buscar CEP", error);
-      } finally {
-        setCepLoading(false);
+    if (digits.length < 8) {
+      setCepError(null);
+      return;
+    }
+
+    setCepLoading(true);
+    setCepError(null);
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+      const data = await response.json();
+      if (data.erro) {
+        setCepError("CEP não encontrado. Verifique os números.");
+        setAddress((prev) => ({
+          ...prev,
+          cep: formatted,
+          street: "",
+          neighborhood: "",
+          city: "",
+          state: "",
+        }));
+      } else {
+        setCepError(null);
+        setAddress((prev) => ({
+          ...prev,
+          cep: formatted,
+          street: data.logradouro ?? "",
+          neighborhood: data.bairro ?? "",
+          city: data.localidade ?? "",
+          state: data.uf ?? "",
+        }));
       }
+    } catch (error) {
+      console.error("Erro ao buscar CEP", error);
+      setCepError("Não foi possível validar o CEP. Tente de novo.");
+    } finally {
+      setCepLoading(false);
     }
   };
 
   const cepDigits = onlyDigits(address.cep);
+  const cpfDigits = onlyDigits(customer.cpf);
+  const cpfInvalid = cpfDigits.length === 11 && !isValidCpf(cpfDigits);
 
   const subtotal = kit.price * quantity;
   const shippingPrice = shipping === 'sedex' ? 19.45 : 0;
@@ -160,6 +199,24 @@ const Checkout = ({ kit, onBack, onFinish }: { kit: any, onBack: () => void, onF
 
     if (!requiredFieldsFilled) {
       setSubmitError("Preencha nome, e-mail, CPF e telefone para continuar.");
+      return;
+    }
+
+    if (cpfDigits.length !== 11) {
+      setSubmitError("Informe o CPF completo (11 dígitos).");
+      return;
+    }
+    if (!isValidCpf(customer.cpf)) {
+      setSubmitError("O CPF informado é inválido.");
+      return;
+    }
+
+    if (cepDigits.length !== 8) {
+      setSubmitError("Informe o CEP completo (8 dígitos).");
+      return;
+    }
+    if (cepError) {
+      setSubmitError("Corrija o CEP antes de finalizar o pedido.");
       return;
     }
 
@@ -227,7 +284,7 @@ const Checkout = ({ kit, onBack, onFinish }: { kit: any, onBack: () => void, onF
                     autoComplete="off"
                     placeholder="000.000.000-00"
                     maxLength={14}
-                    className={inputMaskedClass}
+                    className={cpfInvalid ? inputMaskedErrorClass : inputMaskedClass}
                     value={customer.cpf}
                     onChange={(e) =>
                       setCustomer({
@@ -236,6 +293,9 @@ const Checkout = ({ kit, onBack, onFinish }: { kit: any, onBack: () => void, onF
                       })
                     }
                   />
+                  {cpfInvalid && (
+                    <p className="text-xs text-red-600 font-medium">CPF inválido. Confira os números.</p>
+                  )}
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-[#4C1D95] uppercase tracking-wider">Celular / WhatsApp</label>
@@ -277,12 +337,15 @@ const Checkout = ({ kit, onBack, onFinish }: { kit: any, onBack: () => void, onF
                       autoComplete="postal-code"
                       placeholder="00000-000"
                       maxLength={9}
-                      className={inputMaskedClass}
+                      className={cepError ? inputMaskedErrorClass : inputMaskedClass}
                       value={address.cep}
                       onChange={handleCepChange}
                     />
                     {cepLoading && <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-[#7B61FF] border-t-transparent rounded-full animate-spin"></div>}
                   </div>
+                  {cepError && (
+                    <p className="text-xs text-red-600 font-medium">{cepError}</p>
+                  )}
                 </div>
                 <div className="sm:col-span-2 space-y-1.5">
                   <label className="text-xs font-bold text-[#4C1D95] uppercase tracking-wider">Endereço</label>
@@ -346,7 +409,7 @@ const Checkout = ({ kit, onBack, onFinish }: { kit: any, onBack: () => void, onF
                 </div>
               </div>
 
-              {cepDigits.length === 8 && (
+              {cepDigits.length === 8 && !cepLoading && !cepError && (
                 <div className="space-y-4 pt-4 border-t border-[#F5F3FF]">
                   <label className="text-xs font-bold text-[#4C1D95] uppercase tracking-wider">Escolha o Frete</label>
                   <div className="grid gap-3">
@@ -477,11 +540,9 @@ const Checkout = ({ kit, onBack, onFinish }: { kit: any, onBack: () => void, onF
                 <p className="text-xs text-red-500 text-center">{submitError}</p>
               )}
 
-              <div className="flex items-center justify-center gap-4 pt-4 opacity-50 grayscale">
-                <img src="https://logodownload.org/wp-content/uploads/2020/02/pix-logo-1.png" alt="PIX" className="h-4" />
-                <div className="w-px h-4 bg-[#EBE9FE]" />
+              <div className="flex items-center justify-center gap-2 pt-4">
                 <div className="flex items-center gap-1 text-[10px] font-bold text-[#4C1D95]">
-                  <ShieldCheck size={12} />
+                  <ShieldCheck size={12} className="text-[#7B61FF]" />
                   COMPRA SEGURA
                 </div>
               </div>
