@@ -3,6 +3,9 @@
   "buildCommand": "npm run build",
   "outputDirectory": "envy-skin-clone/dist",
   "functions": {
+    "api/health.ts": {
+      "maxDuration": 10
+    },
     "api/pix/charge.ts": {
       "includeFiles": "lib/**",
       "maxDuration": 60
