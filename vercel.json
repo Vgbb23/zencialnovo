@@ -1,0 +1,5 @@
+{
+  "installCommand": "npm install && npm install --prefix envy-skin-clone",
+  "buildCommand": "npm run build",
+  "outputDirectory": "envy-skin-clone/dist"
+}
