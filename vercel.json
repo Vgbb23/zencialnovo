@@ -1,5 +1,15 @@
 {
   "installCommand": "npm install && npm install --prefix envy-skin-clone",
   "buildCommand": "npm run build",
-  "outputDirectory": "envy-skin-clone/dist"
+  "outputDirectory": "envy-skin-clone/dist",
+  "functions": {
+    "api/pix/charge.ts": {
+      "includeFiles": "envy-skin-clone/server/**",
+      "maxDuration": 60
+    },
+    "api/order/[orderId].ts": {
+      "includeFiles": "envy-skin-clone/server/**",
+      "maxDuration": 30
+    }
+  }
 }

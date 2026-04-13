@@ -1,5 +1,16 @@
 /** Lógica Fruitfy compartilhada entre Express (dev) e rotas serverless (Vercel). */
 
+async function readJsonFromResponse(response: Response): Promise<unknown> {
+  const text = await response.text();
+  const t = text.trim();
+  if (!t) return {};
+  try {
+    return JSON.parse(t) as unknown;
+  } catch {
+    return { __nonJson: true, __preview: t.slice(0, 240) };
+  }
+}
+
 function getEnv() {
   return {
     FRUITFY_API_BASE_URL: process.env.FRUITFY_API_BASE_URL || "https://api.fruitfy.io",
@@ -58,7 +69,9 @@ async function fetchFruitfyOrder(uuid: string): Promise<Record<string, unknown> 
     },
   });
   if (!r.ok) return null;
-  const j = (await r.json()) as { data?: unknown };
+  const parsed = await readJsonFromResponse(r);
+  if (parsed && typeof parsed === "object" && (parsed as { __nonJson?: boolean }).__nonJson) return null;
+  const j = parsed as { data?: unknown };
   const d = j?.data ?? j;
   if (d && typeof d === "object" && !Array.isArray(d)) return { ...(d as object) } as Record<string, unknown>;
   return null;
@@ -162,12 +175,24 @@ export async function handlePixChargePost(body: unknown): Promise<{ status: numb
       });
     }
 
-    const responseJson = (await gatewayResponse.json()) as {
+    const responseJson = (await readJsonFromResponse(gatewayResponse)) as {
       success?: boolean;
       message?: string;
       data?: unknown;
       errors?: unknown;
+      __nonJson?: boolean;
     };
+
+    if (responseJson && typeof responseJson === "object" && responseJson.__nonJson) {
+      return {
+        status: 502,
+        body: {
+          success: false,
+          message:
+            "A API da Fruitfy devolveu uma resposta inválida. Confira FRUITFY_TOKEN, Store e Product no painel da Vercel.",
+        },
+      };
+    }
 
     if (!gatewayResponse.ok) {
       return {

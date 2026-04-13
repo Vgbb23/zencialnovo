@@ -10,5 +10,5 @@
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true
   },
-  "include": ["api/**/*.ts", "envy-skin-clone/server/bridge.ts"]
+  "include": ["api/**/*.ts", "envy-skin-clone/server/**/*.ts"]
 }
