@@ -7,11 +7,9 @@
       "maxDuration": 10
     },
     "api/pix/charge.ts": {
-      "includeFiles": "lib/**",
       "maxDuration": 60
     },
     "api/order/[orderId].ts": {
-      "includeFiles": "lib/**",
       "maxDuration": 30
     }
   }

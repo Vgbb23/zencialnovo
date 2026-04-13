@@ -1,4 +1,4 @@
-/** Lógica Fruitfy: Express (dev) + rotas serverless Vercel (`api/`). */
+/** Lógica Fruitfy: Express (dev) + rotas serverless Vercel — fica em `api/lib` para o bundle ESM da Vercel resolver o módulo. */
 
 async function readJsonFromResponse(response: Response): Promise<unknown> {
   const text = await response.text();
