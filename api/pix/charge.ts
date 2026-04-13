@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { handlePixChargePost } from "../../envy-skin-clone/server/bridge";
+import { handlePixChargePost } from "../../lib/fruitfyBridge";
 import { loadProjectEnv, parseJsonBody, sendJson } from "../lib/vercelHelpers";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

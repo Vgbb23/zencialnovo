@@ -1,4 +1,4 @@
-/** Lógica Fruitfy compartilhada entre Express (dev) e rotas serverless (Vercel). */
+/** Lógica Fruitfy: Express (dev) + rotas serverless Vercel (`api/`). */
 
 async function readJsonFromResponse(response: Response): Promise<unknown> {
   const text = await response.text();

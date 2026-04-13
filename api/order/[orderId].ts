@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { handleOrderGet } from "../../envy-skin-clone/server/bridge";
+import { handleOrderGet } from "../../lib/fruitfyBridge";
 import { loadProjectEnv, sendJson } from "../lib/vercelHelpers";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

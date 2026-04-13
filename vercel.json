@@ -4,11 +4,11 @@
   "outputDirectory": "envy-skin-clone/dist",
   "functions": {
     "api/pix/charge.ts": {
-      "includeFiles": "envy-skin-clone/server/**",
+      "includeFiles": "lib/**",
       "maxDuration": 60
     },
     "api/order/[orderId].ts": {
-      "includeFiles": "envy-skin-clone/server/**",
+      "includeFiles": "lib/**",
       "maxDuration": 30
     }
   }
