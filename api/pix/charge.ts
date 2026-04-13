@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { handlePixChargePost } from "../lib/fruitfyBridge";
-import { loadProjectEnv, parseJsonBody, sendJson } from "../lib/vercelHelpers";
+import { handlePixChargePost } from "../lib/fruitfyBridge.js";
+import { loadProjectEnv, parseJsonBody, sendJson } from "../lib/vercelHelpers.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   loadProjectEnv();

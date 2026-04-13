@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import express from "express";
-import { handleOrderGet, handlePixChargePost } from "../../api/lib/fruitfyBridge";
+import { handleOrderGet, handlePixChargePost } from "../../api/lib/fruitfyBridge.js";
 
 dotenv.config({ path: ".env" });
 dotenv.config({ path: ".env.local", override: true });

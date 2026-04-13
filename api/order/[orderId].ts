@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { handleOrderGet } from "../lib/fruitfyBridge";
-import { loadProjectEnv, sendJson } from "../lib/vercelHelpers";
+import { handleOrderGet } from "../lib/fruitfyBridge.js";
+import { loadProjectEnv, sendJson } from "../lib/vercelHelpers.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   loadProjectEnv();
