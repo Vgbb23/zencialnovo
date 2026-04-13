@@ -95,6 +95,15 @@ function mergeTrackingPayload(utm: unknown, urlParams: unknown): Record<string, 
   return Object.keys(merged).length ? merged : undefined;
 }
 
+/** Doc Fruitfy: telefone só dígitos, ex. `5511999999999` (DDI 55 + DDD + número). */
+function normalizeFruitfyPhone(raw: string): string {
+  const d = raw.replace(/\D/g, "");
+  if (!d) return d;
+  if (d.startsWith("55") && d.length >= 12) return d;
+  if (d.length === 10 || d.length === 11) return `55${d}`;
+  return d;
+}
+
 export async function handlePixChargePost(body: unknown): Promise<{ status: number; body: unknown }> {
   try {
     const { FRUITFY_TOKEN, FRUITFY_STORE_ID, FRUITFY_PRODUCT_ID, FRUITFY_API_BASE_URL, FRUITFY_PIX_CHARGE_PATH } =
@@ -141,7 +150,7 @@ export async function handlePixChargePost(body: unknown): Promise<{ status: numb
       name: String(name),
       email: String(email),
       cpf: String(cpf).replace(/\D/g, ""),
-      phone: String(phone).replace(/\D/g, ""),
+      phone: normalizeFruitfyPhone(String(phone)),
       items: [
         {
           id: FRUITFY_PRODUCT_ID,
