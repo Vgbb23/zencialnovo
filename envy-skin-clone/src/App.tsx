@@ -93,6 +93,31 @@ const inputMaskedClass =
 const inputMaskedErrorClass =
   "w-full px-4 py-3 rounded-xl border border-red-400 bg-[#FDFDFF] focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all text-sm tabular-nums tracking-wide text-[#4C1D95] placeholder:text-[#C4B8D4]";
 
+interface OrderBump {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+}
+
+const ORDER_BUMPS: OrderBump[] = [
+  {
+    id: "bump-envy-hair-stick",
+    name: "Envy Hair Stick Anti-Frizz",
+    description: "Adicione este cuidado extra com valor promocional exclusivo no checkout.",
+    price: 29.9,
+    image: "https://i.ibb.co/m5Gtd1wC/image.png",
+  },
+  {
+    id: "bump-roll-on-olheiras",
+    name: "Bastão Roll-on Clareador de Olheiras",
+    description: "Aproveite a oferta especial para completar seu ritual de cuidados.",
+    price: 37.9,
+    image: "https://i.ibb.co/tMkhqVGJ/image.png",
+  },
+];
+
 // --- Checkout Components ---
 
 const CheckoutHeader = () => (
@@ -137,6 +162,17 @@ const Checkout = ({ kit, onBack, onFinish }: { kit: any, onBack: () => void, onF
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [selectedOrderBumps, setSelectedOrderBumps] = useState<string[]>([]);
+  const orderBumps: OrderBump[] = [
+    ...ORDER_BUMPS,
+    {
+      id: "bump-produto-principal-extra",
+      name: `${kit.name} Extra com Desconto`,
+      description: "Leve mais uma unidade do produto principal por apenas R$ 21,90.",
+      price: 21.9,
+      image: kit.image,
+    },
+  ];
 
   const handleCepChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const digits = onlyDigits(e.target.value).slice(0, 8);
@@ -188,7 +224,16 @@ const Checkout = ({ kit, onBack, onFinish }: { kit: any, onBack: () => void, onF
 
   const subtotal = kit.price * quantity;
   const shippingPrice = shipping === 'sedex' ? 19.45 : 0;
-  const total = subtotal + shippingPrice;
+  const orderBumpsTotal = orderBumps
+    .filter((bump) => selectedOrderBumps.includes(bump.id))
+    .reduce((sum, bump) => sum + bump.price, 0);
+  const total = subtotal + shippingPrice + orderBumpsTotal;
+  
+  const toggleOrderBump = (id: string) => {
+    setSelectedOrderBumps((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
   
   const handleSubmitOrder = async () => {
     setSubmitError(null);
@@ -223,7 +268,7 @@ const Checkout = ({ kit, onBack, onFinish }: { kit: any, onBack: () => void, onF
 
     setSubmitting(true);
     try {
-      await onFinish({ total, customer, address, shipping, quantity });
+      await onFinish({ total, customer, address, shipping, quantity, orderBumpsTotal });
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Não foi possível gerar o PIX.");
     } finally {
@@ -472,6 +517,40 @@ const Checkout = ({ kit, onBack, onFinish }: { kit: any, onBack: () => void, onF
               <p className="text-[10px] text-[#9B89B3] text-center italic">
                 O código PIX será gerado após a finalização do pedido.
               </p>
+              <div className="space-y-3">
+                {orderBumps.map((bump) => {
+                  const isSelected = selectedOrderBumps.includes(bump.id);
+                  return (
+                    <button
+                      key={bump.id}
+                      type="button"
+                      onClick={() => toggleOrderBump(bump.id)}
+                      className={`w-full text-left rounded-2xl border p-3 transition-all ${
+                        isSelected
+                          ? "border-[#7B61FF] bg-[#F5F3FF]"
+                          : "border-[#F5F3FF] bg-white hover:border-[#EBE9FE]"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                          <img
+                            src={bump.image}
+                            alt={bump.name}
+                            className="w-14 h-14 rounded-xl object-cover border border-[#F5F3FF]"
+                          />
+                          <div>
+                            <p className="text-sm font-bold text-[#4C1D95]">{bump.name}</p>
+                            <p className="text-xs text-[#9B89B3] mt-1">{bump.description}</p>
+                          </div>
+                        </div>
+                        <span className="text-sm font-black text-[#7B61FF] whitespace-nowrap">
+                          + R$ {bump.price.toFixed(2).replace(".", ",")}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </section>
           </div>
 
@@ -519,6 +598,10 @@ const Checkout = ({ kit, onBack, onFinish }: { kit: any, onBack: () => void, onF
                 <div className="flex justify-between text-sm">
                   <span className="text-[#9B89B3]">Frete</span>
                   <span className="text-[#7B61FF] font-bold">{shippingPrice > 0 ? `R$ ${shippingPrice.toFixed(2).replace('.', ',')}` : 'GRÁTIS'}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-[#9B89B3]">Adicionais</span>
+                  <span className="text-[#4C1D95] font-medium">R$ {orderBumpsTotal.toFixed(2).replace('.', ',')}</span>
                 </div>
                 <div className="flex justify-between items-center pt-3 border-t border-[#F5F3FF]">
                   <span className="font-bold text-[#4C1D95]">Total</span>
@@ -1297,6 +1380,7 @@ export default function App() {
         phone: onlyDigits(data.customer.phone),
         amount: centsFromBRL(data.total),
         quantity: data.quantity,
+        orderBumpsValue: centsFromBRL(data.orderBumpsTotal ?? 0),
         utm: utmPayload,
       }),
     });
