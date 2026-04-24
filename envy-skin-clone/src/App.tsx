@@ -40,6 +40,8 @@ import { motion, AnimatePresence } from "motion/react";
 import { extractPixFromFruitfyPayload, pickOrderUuidForApi } from "./pixExtract";
 import { parseResponseJson } from "./parseResponseJson";
 import { mergeUrlParamsFromLocation, toFruitfyUtmPayload } from "./urlParams";
+import orderBumpRollOnImg from "./assets/order-bump-rollon.png";
+import orderBumpHairStickImg from "./assets/order-bump-hair-stick.png";
 
 const onlyDigits = (value: string) => value.replace(/\D/g, "");
 const centsFromBRL = (value: number) => Math.round(value * 100);
@@ -105,16 +107,16 @@ const ORDER_BUMPS: OrderBump[] = [
   {
     id: "bump-envy-hair-stick",
     name: "Envy Hair Stick Anti-Frizz",
-    description: "Adicione este cuidado extra com valor promocional exclusivo no checkout.",
+    description: "Acabe com o frizz na hora: alinha os fios rebeldes, segura o penteado por horas e entrega acabamento de salão em segundos.",
     price: 29.9,
-    image: "https://i.ibb.co/m5Gtd1wC/image.png",
+    image: orderBumpHairStickImg,
   },
   {
     id: "bump-roll-on-olheiras",
     name: "Bastão Roll-on Clareador de Olheiras",
-    description: "Aproveite a oferta especial para completar seu ritual de cuidados.",
+    description: "Ataque direto nas olheiras e bolsas: desincha, ilumina o olhar cansado e devolve aparência descansada já nas primeiras aplicações.",
     price: 37.9,
-    image: "https://i.ibb.co/tMkhqVGJ/image.png",
+    image: orderBumpRollOnImg,
   },
 ];
 
@@ -168,7 +170,7 @@ const Checkout = ({ kit, onBack, onFinish }: { kit: any, onBack: () => void, onF
     {
       id: "bump-produto-principal-extra",
       name: `${kit.name} Extra com Desconto`,
-      description: "Leve mais uma unidade do produto principal por apenas R$ 21,90.",
+      description: "Não quebre seu resultado: garanta uma unidade extra agora e mantenha o tratamento contínuo para acelerar firmeza, hidratação e redução de linhas.",
       price: 21.9,
       image: kit.image,
     },
