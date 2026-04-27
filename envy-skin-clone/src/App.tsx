@@ -40,6 +40,12 @@ import { motion, AnimatePresence } from "motion/react";
 import { extractPixFromFruitfyPayload, pickOrderUuidForApi } from "./pixExtract";
 import { parseResponseJson } from "./parseResponseJson";
 import { mergeUrlParamsFromLocation, toFruitfyUtmPayload } from "./urlParams";
+import {
+  KIT_CATALOG,
+  formatBRL,
+  installment12Label,
+  listPriceBRLFromKit,
+} from "../../api/lib/kitPrices";
 import orderBumpRollOnImg from "./assets/order-bump-rollon.png";
 import orderBumpHairStickImg from "./assets/order-bump-hair-stick.png";
 
@@ -1164,61 +1170,60 @@ const Kits = ({ onAddToCart }: { onAddToCart: (kit: any) => void }) => (
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 sm:gap-12 lg:gap-8 items-center">
-        {/* Kit 1 */}
-        <div className="border border-[#F5F3FF] rounded-3xl p-6 sm:p-8 flex flex-col items-center text-center space-y-6 hover:shadow-xl transition-all">
-          <p className="text-[10px] font-bold text-[#9B89B3] uppercase tracking-widest">Tratamento 1 Mês</p>
-          <div className="w-40 h-40 sm:w-48 sm:h-48 bg-[#F5F3FF] rounded-2xl overflow-hidden">
-            <img src="https://i.ibb.co/m5Gtd1wC/image.png" alt="Kit 1 Unidade" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-          </div>
-          <h3 className="text-xl sm:text-2xl font-bold text-[#4C1D95]">1 Unidade</h3>
-          <div className="space-y-1">
-            <p className="text-[#9B89B3] line-through text-xs sm:text-sm">R$ 79,80</p>
-            <p className="text-3xl sm:text-4xl font-bold text-[#4C1D95]">R$ 39,90</p>
-            <p className="text-xs sm:text-sm text-[#9B89B3]">ou 12x de R$ 3,99</p>
-          </div>
-          <button onClick={() => onAddToCart({ id: 1, name: "1 Unidade", price: 39.90, image: "https://i.ibb.co/m5Gtd1wC/image.png" })} className="w-full py-4 bg-[#F5F3FF] text-[#7B61FF] rounded-full font-bold hover:bg-[#7B61FF] hover:text-white transition-all text-sm sm:text-base">
-            COMPRAR AGORA
-          </button>
-        </div>
+        {KIT_CATALOG.map((kit) => {
+          const list = listPriceBRLFromKit(kit.priceBRL);
+          const savings = Math.round((list - kit.priceBRL) * 100) / 100;
+          const cardClass = kit.popular
+            ? "border-2 border-[#7B61FF] rounded-3xl p-6 sm:p-8 flex flex-col items-center text-center space-y-6 shadow-2xl relative sm:transform sm:scale-105 bg-white z-10"
+            : "border border-[#F5F3FF] rounded-3xl p-6 sm:p-8 flex flex-col items-center text-center space-y-6 hover:shadow-xl transition-all";
+          const treatmentClass = kit.popular
+            ? "text-[10px] font-bold text-[#4C1D95] uppercase tracking-widest"
+            : "text-[10px] font-bold text-[#9B89B3] uppercase tracking-widest";
 
-        {/* Kit 2 - Popular */}
-        <div className="border-2 border-[#7B61FF] rounded-3xl p-6 sm:p-8 flex flex-col items-center text-center space-y-6 shadow-2xl relative sm:transform sm:scale-105 bg-white z-10">
-          <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#7B61FF] text-white px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
-            Mais Vendido
-          </div>
-          <p className="text-[10px] font-bold text-[#4C1D95] uppercase tracking-widest">Tratamento 2 Meses</p>
-          <div className="w-40 h-40 sm:w-48 sm:h-48 bg-[#F5F3FF] rounded-2xl overflow-hidden">
-            <img src="https://i.ibb.co/tMkhqVGJ/image.png" alt="Kit 2 Unidades" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-          </div>
-          <h3 className="text-xl sm:text-2xl font-bold text-[#4C1D95]">2 Unidades</h3>
-          <div className="space-y-1">
-            <p className="text-[#9B89B3] line-through text-xs sm:text-sm">R$ 139,80</p>
-            <p className="text-3xl sm:text-4xl font-bold text-[#4C1D95]">R$ 69,90</p>
-            <p className="text-xs sm:text-sm text-[#7B61FF] font-bold">Economia de R$ 69,90</p>
-            <p className="text-xs sm:text-sm text-[#9B89B3]">ou 12x de R$ 6,99</p>
-          </div>
-          <button onClick={() => onAddToCart({ id: 2, name: "2 Unidades", price: 69.90, image: "https://i.ibb.co/tMkhqVGJ/image.png" })} className="w-full py-4 bg-[#7B61FF] text-white rounded-full font-bold hover:bg-[#4C1D95] transition-all shadow-lg shadow-purple-200 text-sm sm:text-base">
-            APROVEITAR OFERTA
-          </button>
-        </div>
-
-        {/* Kit 3 */}
-        <div className="border border-[#F5F3FF] rounded-3xl p-6 sm:p-8 flex flex-col items-center text-center space-y-6 hover:shadow-xl transition-all">
-          <p className="text-[10px] font-bold text-[#9B89B3] uppercase tracking-widest">Tratamento 3 Meses</p>
-          <div className="w-40 h-40 sm:w-48 sm:h-48 bg-[#F5F3FF] rounded-2xl overflow-hidden">
-            <img src="https://i.ibb.co/60S1K1KV/image.png" alt="Kit 3 Unidades" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-          </div>
-          <h3 className="text-xl sm:text-2xl font-bold text-[#4C1D95]">3 Unidades</h3>
-          <div className="space-y-1">
-            <p className="text-[#9B89B3] line-through text-xs sm:text-sm">R$ 199,80</p>
-            <p className="text-3xl sm:text-4xl font-bold text-[#4C1D95]">R$ 99,90</p>
-            <p className="text-xs sm:text-sm text-[#7B61FF] font-bold">50% de Desconto</p>
-            <p className="text-xs sm:text-sm text-[#9B89B3]">ou 12x de R$ 9,99</p>
-          </div>
-          <button onClick={() => onAddToCart({ id: 3, name: "3 Unidades", price: 99.90, image: "https://i.ibb.co/60S1K1KV/image.png" })} className="w-full py-4 bg-[#F5F3FF] text-[#7B61FF] rounded-full font-bold hover:bg-[#7B61FF] hover:text-white transition-all text-sm sm:text-base">
-            COMPRAR AGORA
-          </button>
-        </div>
+          return (
+            <div key={kit.id} className={cardClass}>
+              {kit.popular ? (
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#7B61FF] text-white px-4 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                  Mais Vendido
+                </div>
+              ) : null}
+              <p className={treatmentClass}>{kit.treatmentLabel}</p>
+              <div className="w-40 h-40 sm:w-48 sm:h-48 bg-[#F5F3FF] rounded-2xl overflow-hidden">
+                <img src={kit.image} alt={`Kit ${kit.name}`} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              </div>
+              <h3 className="text-xl sm:text-2xl font-bold text-[#4C1D95]">{kit.name}</h3>
+              <div className="space-y-1">
+                <p className="text-[#9B89B3] line-through text-xs sm:text-sm">R$ {formatBRL(list)}</p>
+                <p className="text-3xl sm:text-4xl font-bold text-[#4C1D95]">R$ {formatBRL(kit.priceBRL)}</p>
+                {kit.id === 2 ? (
+                  <p className="text-xs sm:text-sm text-[#7B61FF] font-bold">Economia de R$ {formatBRL(savings)}</p>
+                ) : null}
+                {kit.id === 3 ? (
+                  <p className="text-xs sm:text-sm text-[#7B61FF] font-bold">50% de Desconto</p>
+                ) : null}
+                <p className="text-xs sm:text-sm text-[#9B89B3]">ou 12x de R$ {installment12Label(kit.priceBRL)}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  onAddToCart({
+                    id: kit.id,
+                    name: kit.name,
+                    price: kit.priceBRL,
+                    image: kit.image,
+                  })
+                }
+                className={
+                  kit.popular
+                    ? "w-full py-4 bg-[#7B61FF] text-white rounded-full font-bold hover:bg-[#4C1D95] transition-all shadow-lg shadow-purple-200 text-sm sm:text-base"
+                    : "w-full py-4 bg-[#F5F3FF] text-[#7B61FF] rounded-full font-bold hover:bg-[#7B61FF] hover:text-white transition-all text-sm sm:text-base"
+                }
+              >
+                {kit.popular ? "APROVEITAR OFERTA" : "COMPRAR AGORA"}
+              </button>
+            </div>
+          );
+        })}
       </div>
     </div>
   </section>

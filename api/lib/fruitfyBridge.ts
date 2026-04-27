@@ -292,3 +292,11 @@ export async function handleOrderGet(orderIdRaw: string | undefined): Promise<{ 
     };
   }
 }
+
+/** Catálogo de preços dos kits — reexportado junto ao bridge para manter uma única fonte na API. */
+export {
+  KIT_CATALOG,
+  formatBRL,
+  installment12Label,
+  listPriceBRLFromKit,
+} from "./kitPrices.js";
